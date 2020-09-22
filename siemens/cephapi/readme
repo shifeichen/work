@@ -1,4 +1,4 @@
-this is a shell for creating bucket of ceph
+this is a shell for creating bucket of ceph in my worker kubernetes
 you must install the replies of bucket api
 and you can use it with kubernetes configmap and job.
-i use it with kubernetes job to create database and initial database sql of postgresql in kubernetes.
+
