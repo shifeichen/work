@@ -1,0 +1,35 @@
+#cloud-config
+write_files:
+- path: /root/install-aliyun.sh
+  content: |
+    #!/usr/bin/env bash
+    echo "BEGIN ALI-CLI"
+    wget -qO- https://aliyuncli.alicdn.com/aliyun-cli-linux-3.0.16-amd64.tgz|tar xvz -C /usr/local/bin
+    echo "END ALI-CLI"
+
+- path: /root/install.sh
+  content: |
+    #!/usr/bin/env bash
+    echo "BEGIN USER-DATA"
+    #wget https://mirrors.huaweicloud.com/ansible/ansible-2.8.5.tar.gz
+    wget -O ansible-doc-2.8.5-1.el7.noarch.rpm https://mirrors.aliyun.com/epel/7/aarch64/Packages/a/ansible-doc-2.8.5-1.el7.noarch.rpm?spm=a2c6h.13651111.0.0.13d32f707BhHFx&file=ansible-doc-2.8.5-1.el7.noarch.rpm
+    wget -O ansible-2.8.5-1.el7.noarch.rpm https://mirrors.aliyun.com/epel/7/aarch64/Packages/a/ansible-2.8.5-1.el7.noarch.rpm?spm=a2c6h.13651111.0.0.13d32f707BhHFx&file=ansible-2.8.5-1.el7.noarch.rpm
+    yum localinstall -y ansible-2.8.5-1.el7.noarch.rpm ansible-doc-2.8.5-1.el7.noarch.rpm
+    #yum  install ansible unzip  -y
+    yum  install unzip  -y
+    echo "set cli configuration"
+    aliyun configure set --mode EcsRamRole --language en --region '${region}' --ram-role-name '${role_name}'
+    echo "download ansible roles package from oss to local"
+    aliyun oss cp oss://${bucket_name}/ansible /tmp/ansible.zip
+    echo "unzip the ansible package to ansible roles dir"
+    unzip /tmp/ansible.zip -d /etc/ansible/roles/
+    echo "execute ansible playbook"
+    ansible-playbook /etc/ansible/roles/rabbitmq/deploy/deploy.yml
+    echo "remove the ansible zip file and dir"
+    rm -f /tmp/ansible.zip
+    rm -fr /etc/ansible/roles/rabbitmq
+    echo "END USER-DATA"
+
+runcmd:
+  - bash /root/install-aliyun.sh
+  - bash /root/install.sh

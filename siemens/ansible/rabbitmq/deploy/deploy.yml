@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  become: true
+  vars:
+    prepare_disk: true
+    prepare_rabbit: true
+    install_rabbit: true
+  roles:
+    - rabbitmq

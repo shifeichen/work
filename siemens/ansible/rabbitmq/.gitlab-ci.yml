@@ -1,0 +1,84 @@
+image: docker.siemens.com/mindsphere-ali/ops/infrastructure/hub/ali-gradle-nodejs-terraform-kubectl-python
+
+variables:
+  ENVIRONMENT: "gainteg"
+stages:
+  - PLAN
+  - APPLY
+  - UPDATE
+  - DESTROY
+
+
+.runner_tags: &runner_tags
+  tags:
+  - mdsp-ali-runner-bj
+
+.allowed_branches: &allowed_branches
+  only:
+    refs:
+      - master
+      - tags
+before_script:
+  - date
+#  - git clone git@code.siemens.com:mindsphere-ali/platform/connectivityservices/tools/3rdpackage.git
+#  - cp -a 3rdpackage/.terraform terraform/
+  - chmod +x terraform/.terraform/plugins/linux_amd64/*
+  - terraform --version
+  - \cp -a tls/${ENVIRONMENT} terraform/ansible/rabbitmq/files/cert
+  - cd terraform
+  - ls -a
+  - bash ../scripts/set_vars.sh set_vars_to_terraform
+  - source ../scripts/initTerraform.sh
+  - terraform force-unlock -force  38aaec15-d984-ee3f-cce8-83264b0ff4db||true
+PLAN:
+  environment:
+    name: ${ENVIRONMENT}
+  stage: PLAN
+  <<: *runner_tags
+  <<: *allowed_branches
+  script:
+    - terraform plan
+#  when: manual # why must plan to excute oos?
+APPLY:
+  environment:
+    name: ${ENVIRONMENT}
+  stage: APPLY
+  <<: *runner_tags
+  <<: *allowed_branches
+  when: manual
+  script:
+    - terraform apply -auto-approve
+    - cat ansible/rabbitmq/vars/main.yml
+
+UPDATE:
+  environment:
+    name: ${ENVIRONMENT}
+  stage: UPDATE
+  <<: *runner_tags
+  <<: *allowed_branches
+  when: manual
+  script:
+    - pwd
+    - terraform apply -auto-approve
+    - cat ansible/rabbitmq/vars/main.yml
+    - cat cloud-init.yaml
+    - TemplateName=installrabbit
+    - oos_role=`terraform output oos_role`
+    - region="cn-shanghai"
+    - tag_key="ecs_type"
+    - tag_value="rabbitmq"
+    - oss_bucket=`terraform output oss_bucket`
+    - object_key="ansible"
+    - cd ../oos
+    - cp ../scripts/aliyun ./
+    - chmod +x aliyun
+    - source installrabbit.sh
+DESTROY:
+  environment:
+    name: ${ENVIRONMENT}
+  stage: DESTROY
+  <<: *runner_tags
+  <<: *allowed_branches
+  when: manual
+  script:
+    - terraform destroy -auto-approve

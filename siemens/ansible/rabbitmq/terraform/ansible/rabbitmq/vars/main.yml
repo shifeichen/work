@@ -1,0 +1,49 @@
+vg_name: rabbitmqvg
+lv_name: rabbitmqlv
+vg_pvs: ['vdb']
+
+rabbitmqcookie: yourscookie
+rabbitmq_internal_amqp_username: ${rabbitmq_int_amqp_username}
+rabbitmq_internal_amqp_password: ${rabbitmq_int_amqp_password}
+rabbitmqusername: ${rabbitmq_username}
+rabbitmqpassword: ${rabbitmq_password}
+subscriber_amqp_username: ${sub_amqp_username}
+subscriber_amqp_password: ${sub_amqp_password}
+rabbitmq_management_port: 15672
+rabbitmq_management_https_port: 15671
+management_listener_ssl: true
+mnesia_dir: /data/rabbitmq
+
+#ansible_version : 2.9.1
+ansible_version : ansible-2.8.5-1.el7.noarch
+rabbitmq_version: rabbitmq-server-3.8.0-1.el7.noarch
+erlang_version: erlang-22.1.2-1.el7.x86_64
+
+rabbitmq_manage: true
+
+# RabbitMQ user premissions
+rabbitmq_configure_priv: .*
+rabbitmq_read_priv: .*
+rabbitmq_write_priv: .*
+rabbitmq_user_state: present
+
+rabbitmq_nodename: "rabbit"
+rabbitmq_nodename_suffix: .compute.internal
+
+rabbitmq_default_user_tags:
+  - administrator
+rabbitmq_default_vhost: /
+private_zone_id: ${private_zone_id}
+ptr_private_zone_id: ${ptr_private_zone_id}
+ram_role_name: ${ram_role_name}
+
+private_zone: ${private_zone}
+
+cert_dir: /etc/rabbitmq/cert
+slb_mqttauthrouter_address: ${slb_mqttauthrouter_address}
+slb_mqttauthrouter_port: 8088
+authrouter_proto: http
+deploy_environment: ${deploy_environment}
+
+# Log tail config
+user_defined_id: ${user_defined_id}

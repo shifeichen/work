@@ -1,0 +1,38 @@
+- name: Change NoFiles Limit Edited security/limits.conf
+  pam_limits:
+    domain: '*'
+    limit_type: '-'
+    limit_item: nofile
+    value: 500000
+    comment: increased file creation limit
+
+- name: add hostname and ip bindings
+  lineinfile:
+    dest: /etc/hosts
+    line: "{{ansible_eth0.ipv4.address}} {{ansible_hostname|lower}}.{{private_zone}} {{ansible_hostname|lower}}"
+    state: present
+    insertafter: "127.0.0.1"
+
+- name: Increase File Handler Size change on sysctl.conf
+  sysctl:
+    sysctl_file: /etc/sysctl.d/rabbitmq.conf
+    reload: yes
+    state: present
+    name: fs.file-max
+    value: 500000
+
+- name: Ensure erlang cookies are the same among all instances
+  template:
+    src: erlang.cookie.j2
+    dest: /var/lib/rabbitmq/.erlang.cookie
+    mode: 0400
+  changed_when: false
+
+- debug: msg="{{ansible_fqdn}}"
+#- name: Add Rabbit ENV config file to make sure full hostnames are used
+#  template:
+#    src: rabbitmq-env.conf.j2
+#    dest: /etc/rabbitmq/rabbitmq-env.conf
+#  register: rabbitmqenv
+
+

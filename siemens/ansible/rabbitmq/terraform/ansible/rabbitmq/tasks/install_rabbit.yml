@@ -1,0 +1,228 @@
+# Tasks for installing and configuring RabbitMQ and custom plugins on the system
+- name: Copy zone record python shell script
+  copy:
+    src: add-zone-record.py
+    dest: /tmp/add-zone-record.py
+- name: record rabbitmq node to private zone and reverse zone
+  shell: "python /tmp/add-zone-record.py {{ private_zone_id }} {{ ptr_private_zone_id }} {{ ram_role_name }}"
+  register: recordresult
+- name: Debug record result
+  debug: msg={{ recordresult.stdout }}
+
+- name: Copy Yum Version Lock File
+  copy:
+    src: versionlock.conf
+    dest: /etc/yum/pluginconf.d/versionlock.conf
+- name: Add YUM version pinning config for Erlang, to avoid upgrading to versions unsupported by RabbitMQ
+  template:
+    src: versionlock.list.j2
+    dest: /etc/yum/pluginconf.d/versionlock.list
+  register: versionlock
+- name: Clear Version Lock List When Update
+  shell: yum versionlock clear
+  when: versionlock.changed
+
+- name:  RabbitMQ (Centos 7 repo)
+  yum_repository:
+    name: rabbit
+    baseurl: https://packagecloud.io/rabbitmq/rabbitmq-server/el/7/$basearch
+    state: present
+    gpgcheck: no
+    sslverify: yes
+    gpgkey: https://packagecloud.io/rabbitmq/rabbitmq-server/gpgkey
+    repo_gpgcheck: no
+    file: rabbit
+    enabled: yes
+    sslcacert: /etc/pki/tls/certs/ca-bundle.crt
+    description: RabbitMQ Repo
+    skip_if_unavailable: yes
+
+- name: Add Erlang YUM repo, dependency for RabbitMQ (Centos repo)
+  yum_repository:
+    name: erlang
+    file: rabbit
+    description: Erlang Repository
+    baseurl: https://packagecloud.io/rabbitmq/erlang/el/7/$basearch
+    state: present
+    gpgcheck: no
+    sslverify: yes
+    gpgkey: https://packagecloud.io/rabbitmq/erlang/gpgkey
+    repo_gpgcheck: no
+    sslcacert: /etc/pki/tls/certs/ca-bundle.crt
+    enabled: yes
+    skip_if_unavailable: yes
+
+- name: Install rabbitmq-server package (from RabbitMQ repo)
+  yum:
+    name: ["{{ rabbitmq_version }}", "{{ erlang_version }}"]
+    state: present
+    allow_downgrade: yes
+    update_cache: yes
+    disablerepo: "epel"
+  register: rabbitmqoutput
+  ignore_errors: yes
+
+- name: Change Mount Dir Permission
+  file:
+    path: '{{ mnesia_dir }}'
+    owner: rabbitmq
+    group: rabbitmq
+    mode: u=rwx,g=rwx,o=rx,g+s
+    state: directory
+  changed_when: false
+
+- name: Change Limit NOFILE value in systemd unit file
+  replace:
+    path: /usr/lib/systemd/system/rabbitmq-server.service
+    regexp: 'LimitNOFILE=32768'
+    replace: 'LimitNOFILE=500000'
+  notify:
+  - reload-rabbitmq-server
+  - systemctl-daemon-reload
+
+
+- name: Show hostname for RabbitMQ instance at time of installation
+  shell: "hostname -f"
+  register: hostname_return
+  changed_when: false
+
+- debug: msg={{ hostname_return.stdout }}
+- debug: msg={{ deploy_environment }}
+
+- name: Change Erlang Cookie Permisson
+  file:
+    path: /var/lib/rabbitmq/.erlang.cookie
+    owner: rabbitmq
+    group: rabbitmq
+    mode: 0600
+    state: file
+  changed_when: false
+
+- name: Change rabbitmq dir include cert dir Permisson
+  file:
+    path: '/etc/rabbitmq'
+    owner: rabbitmq
+    group: rabbitmq
+    recurse: yes
+  changed_when: false
+
+
+- name: Start rabbitmq-server in order to use the rabbitctl command in next task
+  systemd:
+    name: rabbitmq-server
+    state: started
+#  when: rabbitmqoutput.changed
+
+###get rabbitmq_delayed_message_exchange plugin
+- name: get other plugin file from gitlab
+  get_url:
+    dest: /usr/lib/rabbitmq/lib/rabbitmq_server-3.8.0/plugins/
+    url: https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/v3.8.0/rabbitmq_delayed_message_exchange-3.8.0.ez
+    validate_certs: no
+###
+- name: Enable management plugin
+  rabbitmq_plugin:
+    new_only: yes # keeps previously installed plugins
+    name: rabbitmq_management
+    state: enabled
+  when: rabbitmq_manage
+- name: Enable RabbitMQ Required Plugin
+  rabbitmq_plugin:
+    new_only: yes
+    name: '{{ item }}'
+    state: enabled
+  with_items:
+  - rabbitmq_mqtt
+  - rabbitmq_auth_backend_http
+  - rabbitmq_auth_backend_cache
+  - rabbitmq_event_exchange
+  - rabbitmq_delayed_message_exchange
+
+- name: Add Rabbit config file
+  template:
+    src: rabbitmq.conf.j2
+    dest: /etc/rabbitmq/rabbitmq.conf
+    owner: rabbitmq
+    group: rabbitmq
+  register: configchange
+
+- name: Stop rabbitmq-server to add config file
+  systemd:
+    name: rabbitmq-server
+    state: stopped
+  when: configchange.changed or rabbitmqenv.changed
+- name: Start rabbitmq-server to enable plugins and add users
+  systemd:
+    name: rabbitmq-server
+    state: started
+    enabled: yes
+  when: configchange.changed or rabbitmqenv.changed
+- name: Stop RabbitMQ Application
+  shell: rabbitmqctl stop_app
+  when: configchange.changed or rabbitmqenv.changed
+- name: Reset RabbitMQ Cluster
+  shell: rabbitmqctl reset
+  when: configchange.changed or rabbitmqenv.changed
+- name: Start RabbitMQ Application
+  shell: rabbitmqctl start_app
+  when: configchange.changed or rabbitmqenv.changed
+
+- name: delete guest user
+  rabbitmq_user:
+    user: guest
+    state: absent
+    force: yes
+  ignore_errors: yes
+
+- name: Setup rabbitmq user with admin access (no node name, localhost mode)
+  rabbitmq_user:
+    user: "{{ rabbitmqusername }}"
+    password: "{{ rabbitmqpassword }}"
+    vhost: "{{ rabbitmq_default_vhost }}"
+    configure_priv: "{{ rabbitmq_configure_priv }}"
+    read_priv: "{{ rabbitmq_read_priv }}"
+    write_priv: "{{ rabbitmq_write_priv }}"
+    tags: "{{ rabbitmq_default_user_tags|join(',') }}"
+    state: "{{ rabbitmq_user_state }}"
+    node: "{{ rabbitmq_nodename }}@{{ hostname_return.stdout }}"
+  ignore_errors: yes
+
+- name: Setup subscriber amqp user with admin access
+  rabbitmq_user:
+    user: "{{ subscriber_amqp_username }}"
+    password: "{{ subscriber_amqp_password }}"
+    vhost: "{{ rabbitmq_default_vhost }}"
+    configure_priv: "{{ rabbitmq_configure_priv }}"
+    read_priv: "{{ rabbitmq_read_priv }}"
+    write_priv: "{{ rabbitmq_write_priv }}"
+    tags: "{{ rabbitmq_default_user_tags|join(',') }}"
+    state: "{{ rabbitmq_user_state }}"
+    node: "{{ rabbitmq_nodename }}@{{ hostname_return.stdout }}"
+  ignore_errors: yes
+
+- name: Setup rabbitmq internal amqp user with admin access
+  rabbitmq_user:
+    user: "{{ rabbitmq_internal_amqp_username }}"
+    password: "{{ rabbitmq_internal_amqp_password }}"
+    vhost: "{{ rabbitmq_default_vhost }}"
+    configure_priv: "{{ rabbitmq_configure_priv }}"
+    read_priv: "{{ rabbitmq_read_priv }}"
+    write_priv: "{{ rabbitmq_write_priv }}"
+    tags: "{{ rabbitmq_default_user_tags|join(',') }}"
+    state: "{{ rabbitmq_user_state }}"
+    node: "{{ rabbitmq_nodename }}@{{ hostname_return.stdout }}"
+  ignore_errors: yes
+
+- name: Enable HA-SYNC-ALL
+  rabbitmq_policy:
+    node: "{{ rabbitmq_nodename }}@{{ hostname_return.stdout }}"
+    name: HA Policy
+    vhost: '/'
+    pattern: '.*'
+  args:
+    tags:
+      ha-mode: "all"
+      ha-sync-mode: "automatic"
+      queue-master-locator: "random"
+      queue-mode: "lazy"
+    state: present

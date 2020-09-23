@@ -1,0 +1,57 @@
+- name: install lvm2 and version lock
+  yum: name='{{ item }}' state=present
+  with_items:
+    - lvm2
+    - yum-versionlock
+    - bind-utils
+    - python-pip
+- name: Install jinja2
+  pip:
+    name: '{{ item }}'
+    state: latest
+  with_items:
+    - jinja2
+    - aliyun-python-sdk-core
+    - aliyun-python-sdk-pvtz
+
+- name: Create LVM VG(s)
+  lvg:
+    vg: '{{ vg_name }}'
+    pvs: "{% for disk in vg_pvs %}/dev/{{ disk }}{% if not loop.last %},{% endif %}{% endfor %}"
+    state: present
+#  when:
+#  - vg_name not in ansible_lvm.vgs
+- name: create a lv
+  lvol:
+    lv: '{{lv_name}}'
+    size: +100%FREE
+    state: present
+    vg: '{{vg_name}}'
+    resizefs: true
+#  when:
+#  - lv_name not in ansible_lvm.lvs
+- name: create fs system
+  filesystem:
+    dev: "/dev/{{vg_name}}/{{lv_name}}"
+    fstype: "xfs"
+
+
+
+- name: Create Rabbit Directory
+  file:
+    path: '{{ item }}'
+    state: directory
+    mode: 0755
+  changed_when: false
+  with_items:
+    - /etc/rabbitmq
+    - /var/lib/rabbitmq
+    - '{{ mnesia_dir }}'
+
+- name: Mount up device by UUID
+  mount:
+    path: '{{ mnesia_dir }}'
+    src: '/dev/{{vg_name}}/{{lv_name}}'
+    fstype: xfs
+    opts: defaults
+    state: mounted

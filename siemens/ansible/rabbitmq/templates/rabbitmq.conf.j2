@@ -1,0 +1,38 @@
+#-------------------------------cluster config-----------------------------------------------------
+cluster_formation.peer_discovery_backend = rabbit_peer_discovery_dns
+cluster_formation.dns.hostname = {{ private_zone }}
+#------------------------------------------------------------------------------------
+
+{% if  management_listener_ssl == true %}
+management.ssl.port       = {{rabbitmq_management_https_port}}
+management.ssl.cacertfile = {{cert_dir}}/ca_certificate.pem
+management.ssl.certfile   = {{cert_dir}}/server_certificate.pem
+management.ssl.keyfile    = {{cert_dir}}/server_key.pem
+{% endif %}
+management.tcp.port = {{rabbitmq_management_port}}
+management.tcp.ip   = 0.0.0.0
+
+
+#-----------------------------------mqtt -------------------------------------------------
+mqtt.default_user = {{ rabbitmqusername  }}
+mqtt.default_pass = {{ rabbitmqpassword }}
+
+mqtt.allow_anonymous = false
+mqtt.subscription_ttl = 86400000
+mqtt.listeners.ssl.default = 8883
+mqtt.tcp_listen_options.sndbuf = 16384
+mqtt.tcp_listen_options.recbuf = 16384
+mqtt.tcp_listen_options.backlog = 8192
+mqtt.tcp_listen_options.nodelay = true
+mqtt.tcp_listen_options.linger.timeout = 0
+mqtt.tcp_listen_options.linger.on = true
+#---------------------------------ssl config---------------------------------------------------
+ssl_options.cacertfile = {{cert_dir}}/ca_certificate.pem
+ssl_options.certfile   = {{cert_dir}}/server_certificate.pem
+ssl_options.keyfile    = {{cert_dir}}/server_key.pem
+ssl_options.verify     = verify_none
+ssl_options.fail_if_no_peer_cert = false
+#---------------------------------amqps not need---------------------------------------------------
+#listeners.ssl.default = 5671
+
+

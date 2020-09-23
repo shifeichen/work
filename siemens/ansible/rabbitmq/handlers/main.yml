@@ -1,0 +1,24 @@
+---
+# handlers file for rabbitmq
+- name: stop-rabbitmq-server
+  systemd:
+    name: rabbitmq-server
+    state: stopped
+
+- name: reload-rabbitmq-server
+  systemd:
+    name: rabbitmq-server
+    daemon_reload: yes
+
+- name: start-rabbitmq-server
+  systemd:
+    name: rabbitmq-server
+    state: started
+
+- name: restart-rabbitmq-server
+  systemd:
+    name: rabbitmq-server
+    state: restarted
+
+- name: systemctl-daemon-reload
+  shell: systemctl daemon-reload

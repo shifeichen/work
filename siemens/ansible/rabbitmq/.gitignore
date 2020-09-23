@@ -1,0 +1,5 @@
+terraform/.terraform/plugins/linux_amd64/*.json
+terraform/.terraform/*state
+terraform/backend.config
+terraform.tfvars
+terraform/*.zip

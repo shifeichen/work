@@ -1,0 +1,12 @@
+---
+- name: Prepare disk
+  import_tasks: prepare_disk.yml
+  when: prepare_disk
+
+- name: Prepare rabbit
+  import_tasks: prepare_rabbit.yml
+  when: prepare_rabbit
+
+- name: install rabbit
+  import_tasks: install_rabbit.yml
+  when: install_rabbit

@@ -1,0 +1,34 @@
+vg_name: rabbitmqvg
+lv_name: rabbitmqlv
+vg_pvs: ['vdb']
+
+rabbitmqcookie: APVTRGPZHAQYKQHADFVVX
+rabbitmqusername: admin
+rabbitmqpassword: MyrabbitmqPassword123456
+rabbitmq_management_port: 15672
+rabbitmq_management_https_port: 15671
+management_listener_ssl: false
+mnesia_dir: /data/rabbitmq
+
+#ansible_version : 2.9.1
+ansible_version : ansible-2.8.5-1.el7.noarch
+rabbitmq_version: rabbitmq-server-3.8.5-1.el7
+erlang_version: erlang-22.1.2-1.el7.x86_64
+
+rabbitmq_manage: true
+
+# RabbitMQ user premissions
+rabbitmq_configure_priv: .*
+rabbitmq_read_priv: .*
+rabbitmq_write_priv: .*
+rabbitmq_user_state: present
+
+rabbitmq_nodename: "rabbit"
+rabbitmq_nodename_suffix: .compute.internal
+
+rabbitmq_default_user_tags:
+  - administrator
+rabbitmq_default_vhost: /
+
+cert_dir: /etc/rabbitmq/cert
+
