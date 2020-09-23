@@ -1,0 +1,223 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-info
+  namespace: {{ .Release.Namespace }}
+data:
+  database.list: |
+    CustomerServiceDB
+    OfferingServiceDB
+    ProvisionServiceDB
+    agentiam
+    agentmanagement
+    applicationdeploymentmanager
+    applicationinstancemanager
+    appmanager
+    assetmanagement
+    assettypemanagement
+    bulkdb
+    communicationdb
+    configurationfilemanager
+    core-gwr
+    core-im
+    core-messagebroker
+    core-piam
+    core-tm
+    core-uiam
+    customerservicedb
+    customparserproxy
+    customparserregistry
+    dataexchange
+    datapointmapper
+    deployservice
+    devicehealth
+    devicerepository
+    devicetyperepository
+    diagnosticservice
+    edgeapprepository
+    eventmanagement
+    firmwarerepository
+    grafana
+    instanceconfigurationmapper
+    localizationservice
+    modelmanagement
+    multilanguagedocumentstore
+    offeringservicedb
+    outofboxconfigurator
+    pc_sdp_repository_database
+    provisionservicedb
+    pts
+    publishservice
+    recordrecoveryservice
+    sharing
+    softwaredeploymentmanager
+    softwareinventory
+    tenant_db
+    timeseriesmonitor
+    workflowexecutor
+  dataexchange_init.sql: |
+    CREATE TABLE operation (
+    id uuid NOT NULL,
+    resource_id uuid,
+    state_id uuid NOT NULL,
+    target_id uuid,
+    transaction_id uuid NOT NULL
+    );
+
+    CREATE TABLE resource (
+    id uuid NOT NULL,
+    content_length bigint,
+    deleted boolean DEFAULT false,
+    last_modified bytea,
+    name character varying(255) NOT NULL,
+    resource_name uuid NOT NULL,
+    tenant_name character varying(255) NOT NULL,
+    user_name character varying(255),
+    parent_id uuid,
+    resource_type_id uuid,
+    visibility_id uuid
+    );
+
+    CREATE TABLE resource_type (
+    id uuid NOT NULL,
+    name character varying(255) NOT NULL
+    );
+
+    CREATE TABLE state (
+    id uuid NOT NULL,
+    name character varying(255) NOT NULL
+    );
+
+    CREATE TABLE transaction (
+    id uuid NOT NULL,
+    message character varying(255),
+    submitted_at bytea,
+    submitted_by character varying(255),
+    submitted_by_tenant_id character varying(255),
+    undo boolean DEFAULT false NOT NULL,
+    resource_id uuid,
+    state_id uuid NOT NULL,
+    transaction_type_id uuid,
+    undo_transaction_type uuid,
+    write_mode_id uuid
+    );
+
+    CREATE TABLE transaction_type (
+    id uuid NOT NULL,
+    name character varying(255) NOT NULL
+    );
+
+    CREATE TABLE visibility (
+    id uuid NOT NULL,
+    name character varying(255) NOT NULL
+    );
+
+    CREATE TABLE write_mode (
+    id uuid NOT NULL,
+    name character varying(255) NOT NULL
+    );
+
+
+    ALTER TABLE ONLY operation
+    ADD CONSTRAINT operation_pkey PRIMARY KEY (id);
+
+    ALTER TABLE ONLY resource
+    ADD CONSTRAINT resource_pkey PRIMARY KEY (id);
+
+    ALTER TABLE ONLY resource_type
+    ADD CONSTRAINT resource_type_pkey PRIMARY KEY (id);
+
+    ALTER TABLE ONLY state
+    ADD CONSTRAINT state_pkey PRIMARY KEY (id);
+
+    ALTER TABLE ONLY transaction
+    ADD CONSTRAINT transaction_pkey PRIMARY KEY (id);
+
+    ALTER TABLE ONLY transaction_type
+    ADD CONSTRAINT transaction_type_pkey PRIMARY KEY (id);
+
+    ALTER TABLE ONLY state
+    ADD CONSTRAINT uk_2g0hi7w44i4sjkffh61pusaav UNIQUE (name);
+
+    ALTER TABLE ONLY transaction_type
+    ADD CONSTRAINT uk_7b60wvmiswp5gmw5j94wpeyd2 UNIQUE (name);
+
+    ALTER TABLE ONLY visibility
+    ADD CONSTRAINT uk_7c069dgftj15qrxcks9hn61mp UNIQUE (name);
+
+    ALTER TABLE ONLY resource_type
+    ADD CONSTRAINT uk_jkjt2dl0v3hxr4lhn5jqcn2vp UNIQUE (name);
+
+    ALTER TABLE ONLY resource
+    ADD CONSTRAINT uk_kidhqdfyw5q64dkka7allex7l UNIQUE (resource_name);
+
+    ALTER TABLE ONLY write_mode
+    ADD CONSTRAINT uk_sk728aucmjlai2yvg75blcb31 UNIQUE (name);
+
+    ALTER TABLE ONLY visibility
+    ADD CONSTRAINT visibility_pkey PRIMARY KEY (id);
+
+    ALTER TABLE ONLY write_mode
+    ADD CONSTRAINT write_mode_pkey PRIMARY KEY (id);
+
+    ALTER TABLE ONLY resource
+    ADD CONSTRAINT fk4ws9c6bkmpjx556f42iqxv9vt FOREIGN KEY (visibility_id) REFERENCES visibility(id);
+
+    ALTER TABLE ONLY operation
+    ADD CONSTRAINT fk5i767gnktlky0dr4ckulph33s FOREIGN KEY (resource_id) REFERENCES resource(id);
+
+    ALTER TABLE ONLY resource
+    ADD CONSTRAINT fkbma5417n022ufdra8d99qscxv FOREIGN KEY (resource_type_id) REFERENCES resource_type(id);
+
+    ALTER TABLE ONLY transaction
+    ADD CONSTRAINT fkdxl2lwf8xrod2qwfo0fdsogm3 FOREIGN KEY (write_mode_id) REFERENCES write_mode(id);
+
+    ALTER TABLE ONLY transaction
+    ADD CONSTRAINT fki6uul0vf33evq3t3cth8ygc19 FOREIGN KEY (state_id) REFERENCES state(id);
+
+    ALTER TABLE ONLY operation
+    ADD CONSTRAINT fkk4oceo96wqqt2fyr644f7n6vk FOREIGN KEY (target_id) REFERENCES resource(id);
+
+    ALTER TABLE ONLY transaction
+    ADD CONSTRAINT fkkx4981pdsrxh5o0thjgv2bun9 FOREIGN KEY (undo_transaction_type) REFERENCES transaction(id);
+
+    ALTER TABLE ONLY transaction
+    ADD CONSTRAINT fkljo7lx0djhkpr7y0nfh82nvfp FOREIGN KEY (resource_id) REFERENCES resource(resource_name);
+
+    ALTER TABLE ONLY operation
+    ADD CONSTRAINT fkm8q3745qrvs4dfotobmcelvs FOREIGN KEY (transaction_id) REFERENCES transaction(id);
+
+    ALTER TABLE ONLY transaction
+    ADD CONSTRAINT fknl0vpl01y6vu03hkpi4xupugo FOREIGN KEY (transaction_type_id) REFERENCES transaction_type(id);
+
+    ALTER TABLE ONLY resource
+    ADD CONSTRAINT fks2byvqo0b2enh3rltln5mmvyl FOREIGN KEY (parent_id) REFERENCES resource(id);
+
+    ALTER TABLE ONLY operation
+    ADD CONSTRAINT fkskfmbimw7fxlvkqjoqlkx9fnf FOREIGN KEY (state_id) REFERENCES state(id);
+
+    INSERT INTO visibility (id, name) VALUES
+    ('60d6bbd5-566d-46e0-9cd8-d4d71d0b87ce', '_PUBLIC_ROOT_ID'), ('e8ac1cea-ee72-4767-9e6b-81dd2fb4c839', '_PRIVATE_ROOT_ID');
+
+    INSERT INTO resource_type (id, name) VALUES
+    ('c1a33b51-e22b-48d4-a404-822529333706', 'FILE'), ('440df811-6085-41da-9c33-2a1ea592f124', 'DIRECTORY');
+
+    INSERT INTO state (id, name) VALUES
+    ('c823c69b-9a96-4af1-a98e-f1669937b12c', 'SUBMITTED'),
+    ('6fcc4b8d-095a-4a48-b078-dedfff0127d9', 'SUCCEEDED'),
+    ('ea77c79d-6d20-4f62-9217-a3f83aa5e520', 'FAILED');
+
+    INSERT INTO write_mode (id, name) VALUES
+    ('c3526cba-2c26-4b63-b1f3-a205659f9c46', 'OVERWRITE'),
+    ('f05ed020-7528-4ebd-93f2-454896bfedef', 'DO_NOT_OVERWRITE');
+
+    INSERT INTO transaction_type (id, name) VALUES
+    ('c855b83e-248b-411b-ad54-fe76425ed368', 'MOVE'),
+    ('11273d15-ef0f-4af9-884a-9a9a4be105cf', 'COPY'),
+    ('6b2b50c9-2452-4e03-85b6-f6234b0d44f0', 'DELETE'),
+    ('5539a447-9094-45a6-b647-278d53970c6d', 'UNDO'),
+    ('f9ed5bcc-419d-4f04-80f8-92c96c0f6903', 'UPLOAD'),
+    ('1cf03c14-95ad-4ccf-9f07-fcffdd2d29e9', 'DOWNLOAD'),
+    ('7f4c4fd0-e032-4978-8f03-c78c9b148572', 'UPDATE_VISIBILITY');
+
+    CREATE DATABASE dataexchange_test TEMPLATE dataexchange;

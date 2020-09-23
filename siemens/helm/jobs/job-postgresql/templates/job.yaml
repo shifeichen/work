@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Chart.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  template:
+    metadata:
+      name: {{ .Chart.Name }}
+    spec:
+      restartPolicy: Never
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Chart.Name }}-info
+        - name: shell
+          configMap:
+            name: {{ .Chart.Name }}-shell
+            defaultMode: 0777
+      containers:
+        - image: alpine:3.12.0
+          name: {{ .Chart.Name }}
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: shell
+              mountPath: /shell
+          command:
+            - sh
+            - -c
+            - /shell/exec_shell.sh
+          env:
+            - name: PGHOST
+              value: {{ .Values.PGHOST }}
+            - name: PGPORT
+              value: {{ .Values.PGPORT |quote }}
+            - name: PGUSER
+              value: {{ .Values.PGUSER }}
+            - name: PGPASSWORD
+              value: {{ .Values.PGPASSWORD }}

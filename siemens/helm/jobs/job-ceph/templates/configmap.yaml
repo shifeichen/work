@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-info
+  namespace: {{ .Release.Namespace }}
+data:
+  buckets: |
+    dataexchange
+    developer
+    developer-artifactory
+    developer-deployservice
+    developer-packagebuilder
+    developer-private
+    developer-publishservice
+    developer-repositoryservice-url-scan
+    exchange-bucket
+    iot-aggregate
+    iot-bigstringstorage
+    iot-bulkjob
+    iot-bulktransform
+    iot-coldstorage
+    iot-filestorage
+    ms-filestorage-iot-int
+    recordrecovery-bucket
+    resources-app-dl-bucket
+    resources-app-up-bucket
+    resources-doc-dl-bucket
+    resources-doc-up-bucket
+    resources-fw-dl-bucket
+    resources-fw-up-bucket

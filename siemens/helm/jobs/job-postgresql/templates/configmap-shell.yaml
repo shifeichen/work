@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-shell
+  namespace: {{ .Release.Namespace }}
+data:
+  exec_shell.sh: |
+    cat >/etc/apk/repositories<<EOF
+    https://mirrors.aliyun.com/alpine/v3.12/main/
+    https://mirrors.aliyun.com/alpine/v3.12/community/
+    EOF
+    apk add postgresql-client
+    echo "PGHOST=$PGHOST  PGPORT=$PGPORT"
+    PGPASSWORD=$PGPASSWORD psql -h $PGHOST -p $PGPORT -U $PGUSER postgres --command="\l"
+    for database in $(cat /config/database.list);do
+         db_number=`PGPASSWORD=$PGPASSWORD psql -h $PGHOST -p $PGPORT -U $PGUSER postgres --command="\l"|grep -o "[[:space:]]$database[[:space:]]"|wc -l||true`
+         if [ ${db_number} -eq 0 ];then
+             PGPASSWORD=$PGPASSWORD createdb -h $PGHOST -p $PGPORT -U $PGUSER $database
+             if [ $? -eq 0 ];then
+                echo "create db $database done" ;
+                echo "exec schema for $database if ${database}_init.sql schema script exist"
+                if [ -f /config/${database}_init.sql ];then
+                    PGPASSWORD=$PGPASSWORD psql -h $PGHOST -p $PGPORT -U $PGUSER -d $database -a -f /config/${database}_init.sql
+                    if [ $? -eq 0 ];then
+                      echo "exec /config/${database}_init.sql successed"
+                    else
+                      echo "exec /config/${database}_init.sql failed"
+                    fi
+                fi
+             else
+                echo "create db $database faild" ;
+             fi
+         else
+           echo "$database exist" ;
+         fi
+    done
+    sleep 120

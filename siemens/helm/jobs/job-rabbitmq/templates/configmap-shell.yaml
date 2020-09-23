@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-shell
+  namespace: {{ .Release.Namespace }}
+data:
+  exec_shell.sh: |
+    apk add curl
+    echo "create vhosts..."
+    cat /config/vhosts | while read vhost
+    do
+      # if [[ $vhost =~ "/" ]];then
+      if [ `echo $vhost|grep '/'|wc -l` -ne 0 ];then
+        vhost=`echo $vhost|sed 's/\//\%2F/g'`
+      fi
+      curl -o /tmp/vhost_result.log -s -i -u $rabbitmquser:$rabbitmqpassword -H "content-type:application/json" -XPUT ${rabbitmqapiurl}/vhosts/${vhost}
+      if [ `cat /tmp/vhost_result.log|grep 'Created'|wc -l` -ne 0 ];then
+        echo "secucced to create vhost $vhost "
+      elif [ `cat /tmp/vhost_result.log|grep 'No[[:space:]]Content'|wc -l ` -ne 0 ];then
+        echo "vhost $vhost already exist"
+      else
+        echo "failed to create vhost $vhost"
+        cat /tmp/vhost_result.log
+        exit 2
+      fi
+    done
+
+    echo "create exchanges..."
+    cat /config/exchanges | while read exchange_row
+    do
+      exchange=`echo $exchange_row|cut -d , -f 1|awk '$1=$1'`
+      exctype=`echo $exchange_row|cut -d , -f 2|awk '$1=$1'`
+      vhost=`echo $exchange_row|cut -d , -f 3|awk '$1=$1'|sed 's/\//\%2F/g'`
+      arguments=`echo $exchange_row|cut -d , -f 4|awk '$1=$1'`
+      curl -o /tmp/exchange_result.log -s -i -u $rabbitmquser:$rabbitmqpassword -H "content-type:application/json" -XPUT -d'{"type":"'$exctype'","durable":true,"arguments":'$arguments'}' ${rabbitmqapiurl}/exchanges/${vhost}/${exchange}
+      if [ `cat /tmp/exchange_result.log|grep 'Created'|wc -l` -ne 0 ];then
+        echo "secucced to create exchange $exchange"
+      elif [ `cat /tmp/exchange_result.log|grep 'No[[:space:]]Content'|wc -l ` -ne 0  ];then
+        echo "exchange $exchange already exist"
+      else
+        echo "failed to create exchange $exchange"
+        cat /tmp/exchange_result.log
+        exit 3
+      fi
+    done
+
+    echo "create queues..."
+    cat /config/queues | while read queue_row
+    do
+      queue=`echo $queue_row|cut -d , -f 1|awk '$1=$1'`
+      qtype=`echo $queue_row|cut -d , -f 2|awk '$1=$1'`
+      vhost=`echo $queue_row|cut -d , -f 3|awk '$1=$1'|sed 's/\//\%2F/g'`
+      arguments=`echo $queue_row|cut -d , -f 4|awk '$1=$1'`
+      curl -o /tmp/queue_result.log -s -i -u $rabbitmquser:$rabbitmqpassword -H "content-type:application/json" -XPUT -d'{"auto_delete":false,"durable":true,"arguments":'$arguments'}' ${rabbitmqapiurl}/queues/${vhost}/${queue}
+      if [ `cat /tmp/queue_result.log|grep 'Created'|wc -l` -ne 0 ];then
+        echo "secucced to create queue $queue "
+      elif [ `cat /tmp/queue_result.log|grep 'No[[:space:]]Content'|wc -l ` -ne 0  ];then
+        echo "queue $queue already exist"
+      else
+        echo "failed to create queue $queue"
+        cat /tmp/queue_result.log
+        exit 4
+      fi
+    done
+
+    echo "create bindings..."
+    cat /config/bindings | while read bind_row
+    do
+      exchange=`echo $bind_row|cut -d , -f 1|awk '$1=$1'`
+      queue=`echo $bind_row|cut -d , -f 2|awk '$1=$1'`
+      routing_key=`echo $bind_row|cut -d , -f 3|awk '$1=$1'`
+      vhost=`echo $bind_row|cut -d , -f 4|awk '$1=$1'|sed 's/\//\%2F/g'`
+      arguments=`echo $bind_row|cut -d , -f 5|awk '$1=$1'`
+      curl -o /tmp/bind_result.log -s -i -u $rabbitmquser:$rabbitmqpassword -H "content-type:application/json" -XPOST -d'{"routing_key":"'$routing_key'","arguments":'$arguments'}' ${rabbitmqapiurl}/bindings/${vhost}/e/${exchange}/q/${queue}
+      if [ `cat /tmp/bind_result.log|grep 'Created'|wc -l` -ne 0 ];then
+        echo "secucced to create bind of $exchange to $queue"
+      elif [ `cat /tmp/bind_result.log|grep 'No[[:space:]]Content'|wc -l ` -ne 0 ];then
+        echo "this bind $exchange to $queue already exist"
+      else
+        echo "failed to create bind of $exchange to $queue"
+        cat /tmp/bind_result.log
+        exit 5
+      fi
+    done

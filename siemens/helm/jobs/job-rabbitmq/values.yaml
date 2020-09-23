@@ -1,0 +1,5 @@
+global:
+  rabbitmqapiurl: http://rabbitmq-ha.mdsp-bk-rabbitmq:15672/api
+  rabbitmquser: admin
+  rabbitmqpassword: 123456
+

@@ -1,0 +1,7 @@
+global:
+  ceph_int_endpoint_uri: rook-ceph-rgw-my-store.mdsp-bk-ceph
+  ceph_int_endpoint_port: 80
+  infra_secret: infra-authentications
+#  infra_secret: mdsp-secret-infra-credentials
+
+

@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-info
+  namespace: {{ .Release.Namespace }}
+data:
+  vhosts: |
+    chenshifei
+#   exchange,type,vhost name,arguments(use single quotes or Paraphrase)
+  exchanges: |
+    asset-notifications-topic,topic,%2F,{}
+    WorkflowEventsTopic,headers,%2F,{}
+    softwareinventory-topic,topic,%2F,{}
+    AOD-AgentHeartbeatTopic,topic,%2F,{}
+    conn,topic,%2F,{}
+    connrs,x-delayed-message,%2F,{'x-delayed-type':'topic'}
+    conndelay,x-delayed-message,%2F,{'x-delayed-type':'topic'}
+#   csfex4,x-delayed-message,chenshifei,{'x-delayed-type':'topic'}
+#   queue name,type,vhost name,arguments(use single quotes or Paraphrase)
+  queues: |
+    edge_outofboxconfigurator_queue,classic,%2F,{}
+    FirmwareDeploymentWorkflowEvents,classic,%2F,{}
+    ApplicationDeploymentWorkflowEvents,classic,%2F,{}
+    softwareInventoryQueue,classic,%2F,{}
+    connagmtoaim,classic,%2F,{}
+    connagmtodpm,classic,%2F,{}
+    connaimtoagm,classic,%2F,{}
+    connaodtoagm,classic,%2F,{}
+    conndiag,classic,%2F,{}
+    connagmtoaod,classic,%2F,{}
+    conndpmnotification,classic,%2F,{}
+    conndpmtotsp,classic,%2F,{}
+    connagmtods,classic,%2F,{}
+    connststods,classic,%2F,{}
+    conndstoex,classic,%2F,{}
+    connrstsp,classic,%2F,{}
+    connrsfp,classic,%2F,{}
+    connrsep,classic,%2F,{}
+    connextoaod,classic,%2F,{}
+    connaodtoaod,classic,%2F,{}
+    conn-datapointmapper,classic,%2F,{}
+    conn-agentmanagement,classic,%2F,{}
+    connrsdscp,classic,%2F,{}
+    connprovisioningquota,classic,%2F,{}
+    connsvctods,classic,%2F,{}
+    connsvctorr,classic,%2F,{}
+#  exchange,queue,routing key,vhost,arguments(use single quotes or Paraphrase or it will result like key1:value1 not "key1":"value1")
+  bindings: |
+    asset-notifications-topic,edge_outofboxconfigurator_queue,#,%2F,{}
+    WorkflowEventsTopic,FirmwareDeploymentWorkflowEvents,#,%2F,{'modelKey':'mdsp-core-firmwareInstallation'}
+    WorkflowEventsTopic,FirmwareDeploymentWorkflowEvents,#,%2F,{'modelKey':'mdsp-core-firmwareRemoval'}
+    WorkflowEventsTopic,ApplicationDeploymentWorkflowEvents,#,%2F,{'modelKey':'mdsp-core-applicationInstallation'}
+    WorkflowEventsTopic,ApplicationDeploymentWorkflowEvents,#,%2F,{'modelKey':'mdsp-core-applicationRemoval'}
+    softwareinventory-topic,softwareInventoryQueue,#,%2F,{}
+    softwareinventory-topic,edge_outofboxconfigurator_queue,#,%2F,{}
+    conn,connagmtoaim,connagmtoaim,%2F,{}
+    conn,connagmtodpm,connagmtodpm,%2F,{}
+    conn,connaimtoagm,connaimtoagm,%2F,{}
+    conn,connaodtoagm,connaodtoosp,%2F,{}
+    conn,conndiag,conndiag,%2F,{}
+    conn,connagmtoaod,connagmtoaod,%2F,{}
+    conn,conndpmnotification,conndpmnotification,%2F,{}
+    conn,conndpmtotsp,conndpmtotsp,%2F,{}
+    conn,connagmtods,connagmtods,%2F,{}
+    conn,connststods,connststods,%2F,{}
+    conn,conndstoex,conndstoex,%2F,{}
+    connrs,connrstsp,connrstsp,%2F,{}
+    connrs,connrsfp,connrsfp,%2F,{}
+    connrs,connrsep,connrsep,%2F,{}
+    conn,connextoaod,connextoaod,%2F,{}
+    conndelay,connaodtoaod,connaodtoaod,%2F,{}
+    asset-notifications-topic,conn-datapointmapper,#,%2F,{}
+    asset-notifications-topic,conn-agentmanagement,#,%2F,{}
+    connrs,connrsdscp,connrsdscp,%2F,{}
+    conn,connprovisioningquota,provisioningquota,%2F,{}
+    conn,connsvctods,conndiag,%2F,{}
+    conn,connsvctods,connrecovandconndiag,%2F,{}
+    conn,connsvctorr,connrecov,%2F,{}
+    conn,connsvctorr,connrecovandconndiag,%2F,{}
+

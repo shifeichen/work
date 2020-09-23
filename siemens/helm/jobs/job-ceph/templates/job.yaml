@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Chart.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  template:
+    metadata:
+      name: {{ .Chart.Name }}
+    spec:
+      restartPolicy: OnFailure
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Chart.Name }}-info
+        - name: shell
+          configMap:
+            name: {{ .Chart.Name }}-shell
+            defaultMode: 0777
+      containers:
+        - image: ubuntu:18.04
+          name: {{ .Chart.Name }}
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: shell
+              mountPath: /shell
+          command:
+            - sh
+            - -c
+            - /shell/exec_shell.sh
+          env:
+            - name: ceph_access_key
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ .Values.global.infra_secret }}
+                  key: ceph_access_key_id
+            - name: ceph_secret_key
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.infra_secret }}
+                  key: ceph_access_key_secret
+            - name: ceph_int_endpoint_uri
+              value: {{ .Values.global.ceph_int_endpoint_uri }}
+            - name: ceph_int_endpoint_port
+              value: {{ .Values.global.ceph_int_endpoint_port | quote }}

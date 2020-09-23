@@ -1,0 +1,4 @@
+PGHOST: postgresql-mdsp.mdsp-bk-postgresql
+PGPORT: 5432
+PGUSER: postgres
+PGPASSWORD: 123456
