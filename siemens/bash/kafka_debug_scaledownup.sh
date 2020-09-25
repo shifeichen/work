@@ -13,7 +13,7 @@ if [ $DAT == $DAT_REF ];then
 			kubectl -n kafka-p-fl4fh scale statefulset kafka-p-fl4fh --replicas=0
 			echo "shutdown done at [$(date)]" >> 1.log
 			while true;do
-				kubectl.exe -n kafka-p-fl4fh get pod |grep 'Terminating'|grep '0/2'
+				kubectl -n kafka-p-fl4fh get pod |grep 'Terminating'|grep '0/2'
 				if [ $? -eq 0 ];then
 					echo "Terminating done at [$(date)]" >> 1.log
 					break
@@ -30,7 +30,7 @@ if [ $DAT == $DAT_REF ];then
 			kubectl -n kafka-p-fl4fh scale statefulset kafka-p-fl4fh --replicas=3
 			echo "startup done at [$(date)]" >> 1.log
 			while true;do
-			  count=$(kubectl.exe -n kafka-p-fl4fh get pod|grep kafka-p-fl4fh-[0-2]|grep 2/2|wc -l)
+			  count=$(kubectl -n kafka-p-fl4fh get pod|grep kafka-p-fl4fh-[0-2]|grep 2/2|wc -l)
 			  if [ $count -eq 3 ];then
 				  echo "all kafka running at [$(date)]" >> 1.log
 				  break
@@ -39,5 +39,5 @@ if [ $DAT == $DAT_REF ];then
 			break
 		fi
 	done
-	kubectl.exe -n kafka-p-fl4fh get pod -o wide -w
+	kubectl -n kafka-p-fl4fh get pod -o wide -w
 fi
