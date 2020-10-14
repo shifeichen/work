@@ -1,0 +1,10 @@
+server =
+{%- for p in core_ports %}
+  {%- for h in groups.redis -%}
+    {{ "%s:%s|"|format(h,p) }}
+    {%- if loop.last -%}
+      {{ "|%s:%s"|format(h,p) }}
+    {% endif %}
+  {%- endfor %}
+{%- endfor %}
+thread = 44

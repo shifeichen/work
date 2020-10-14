@@ -1,0 +1,4 @@
+vg_name: datavg
+lv_name: datalv
+vg_pvs: ['vdb']
+data_dir: /data

@@ -1,0 +1,19 @@
+- name: get jdk from official website
+  get_url:
+    dest: /tmp/
+    url: https://download.java.net/java/ga/jdk11/openjdk-11_linux-x64_bin.tar.gz
+    validate_certs: no
+    force: no
+- name: unarchive remote file to remote dir
+  unarchive:
+    src: /tmp/openjdk-11_linux-x64_bin.tar.gz
+    dest: /usr/local/
+    mode: 0755
+    copy: no
+- name: set env
+  lineinfile: dest=/etc/profile insertafter="{{item.position}}" line="{{item.value}}" state=present
+  with_items:
+    - {position: EOF, value: "export JAVA_HOME={{JAVA_HOME}}"}
+    - {position: EOF, value: "export PATH=$JAVA_HOME/bin:$PATH"}
+- name: enforce env
+  shell: source /etc/profile

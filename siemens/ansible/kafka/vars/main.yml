@@ -1,0 +1,6 @@
+data_dir: /data
+JAVA_HOME: /usr/local/jdk-11
+kafka_data: /data/kafka-logs
+jmx_prometheus_dir: /var/lib/
+jmx_prometheus: /var/lib/jmx_prometheus_javaagent-0.13.0.jar
+jmx_yml: /var/lib/kafka-0-8-2.yml

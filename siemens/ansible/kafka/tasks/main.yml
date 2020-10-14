@@ -1,0 +1,63 @@
+- name: Create kafka Directory
+  file:
+    path: '{{ item }}'
+    state: directory
+    mode: 0755
+  changed_when: false
+  with_items:
+    - '{{ data_dir }}/kafka-logs'
+
+
+- name: get kafka from official website
+  get_url:
+    dest: /tmp/
+    url: https://archive.apache.org/dist/kafka/2.5.0/kafka_2.13-2.5.0.tgz
+    validate_certs: no
+    force: no
+- name: unarchive remote kafka file to remote dir
+  unarchive:
+    src: /tmp/kafka_2.13-2.5.0.tgz
+    dest: /usr/local/
+    mode: 0755
+    copy: no # whether to copy local ansible service's file to remote or just use remote file
+- name: link kafka
+  shell: ln -sv /usr/local/kafka_2.13-2.5.0 /usr/local/kafka
+
+- name: render templates config to zk conf
+  template:
+    src: server.properties.j2
+    dest: /usr/local/kafka/config/server.properties
+    owner: root
+    group: root
+
+- name: Copy jmx yml
+  copy:
+    src: kafka-0-8-2.yml
+    dest: /var/lib/kafka-0-8-2.yml
+
+- name: get jmx file
+  get_url:
+    dest: '{{ jmx_prometheus_dir }}'
+    url: https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.13.0/jmx_prometheus_javaagent-0.13.0.jar
+    validate_certs: no
+    force: no
+
+#- name: jmx file permission
+#  file:
+#    path: '{{ jmx_prometheus }}'
+#    owner: root
+#    group: root
+#    mode: u=rwx,g=rwx,o=rx
+
+- name: copy zookeeper service
+  template:
+    src: kafka.service.j2
+    dest: /etc/systemd/system/kafka.service
+
+- name: start kafka
+  systemd:
+    name: kafka
+    state: started
+    enabled: yes
+    daemon_reload: yes
+

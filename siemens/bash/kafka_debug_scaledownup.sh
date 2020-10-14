@@ -1,7 +1,7 @@
 #this is for kafka to debug,need to scale down kafka and zookeeper to 0 ,and wait for 15 minutes ,then scale up to 3.
-DAT_REF="2020-09-25"
-START_TIME_REF="16:45:00"
-END_TIME_REF="17:00:00"
+DAT_REF="2020-10-13"
+START_TIME_REF="17:30:00"
+END_TIME_REF="17:36:00"
 DAT=$(date +%F)
 echo "start to scale down and up"
 if [ $DAT == $DAT_REF ];then
@@ -39,5 +39,6 @@ if [ $DAT == $DAT_REF ];then
 			break
 		fi
 	done
-	kubectl -n kafka-p-fl4fh get pod -o wide -w
+	kubectl -n kafka-p-fl4fh get pod -o wide
+	cat 1.log
 fi

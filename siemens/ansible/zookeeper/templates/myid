@@ -1,0 +1,3 @@
+{% for server_ip in {{ groups.zk }} %}
+{{ loop.index }}
+{% endfor %}

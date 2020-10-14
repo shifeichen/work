@@ -1,0 +1,38 @@
+- name: install lvm2 and version lock
+  yum: name='{{ item }}' state=present
+  with_items:
+    - lvm2
+- name: Create LVM VG(s)
+  lvg:
+    vg: '{{ vg_name }}'
+    pvs: "{% for disk in vg_pvs %}/dev/{{ disk }}{% if not loop.last %},{% endif %}{% endfor %}"
+    state: present
+- name: create a lv
+  lvol:
+    lv: '{{lv_name}}'
+    size: +100%FREE
+    state: present
+    vg: '{{vg_name}}'
+    resizefs: true
+- name: create fs system
+  filesystem:
+    dev: "/dev/{{vg_name}}/{{lv_name}}"
+    fstype: "xfs"
+
+- name: Create data Directory
+  file:
+    path: '{{ item }}'
+    state: directory
+    mode: 0755
+  changed_when: false
+  with_items:
+    - '{{ data_dir }}'
+
+- name: Mount up device by UUID
+  mount:
+    path: '{{ data_dir }}'
+    src: '/dev/{{vg_name}}/{{lv_name}}'
+    fstype: xfs
+    opts: defaults
+    state: mounted
+

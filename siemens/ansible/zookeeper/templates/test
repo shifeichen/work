@@ -1,0 +1,10 @@
+#{% for server_ip in ansible_default_ipv4.address  %}
+#server.{{ loop.index }}={{ server_ip }}:2888:3888
+#{% endfor %}
+# server.{{ myid }}
+# {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address']}}
+# {{ groups.zk }}
+
+#{% for server_ip in  ansible_default_ipv4.address  %}
+#server.{{ loop.index }}={{ server_ip }}:2888:3888
+#{% endfor %}
