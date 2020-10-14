@@ -19,8 +19,11 @@
     dest: /usr/local/
     mode: 0755
     copy: no # whether to copy local ansible service's file to remote or just use remote file
-- name: link zk
-  shell: ln -sv /usr/local/apache-zookeeper-3.6.1-bin /usr/local/zookeeper
+- name: iink zk file
+  file:
+    src: /usr/local/apache-zookeeper-3.6.1-bin
+    dest: /usr/local/zookeeper
+    state: link
 
 - name: render templates config to zk conf
   template:

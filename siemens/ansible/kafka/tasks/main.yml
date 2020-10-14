@@ -20,8 +20,12 @@
     dest: /usr/local/
     mode: 0755
     copy: no # whether to copy local ansible service's file to remote or just use remote file
+
 - name: link kafka
-  shell: ln -sv /usr/local/kafka_2.13-2.5.0 /usr/local/kafka
+  file:
+    src: /usr/local/kafka_2.13-2.5.0
+    dest: /usr/local/kafka
+    state: link
 
 - name: render templates config to zk conf
   template:
