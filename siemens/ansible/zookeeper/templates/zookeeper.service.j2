@@ -4,11 +4,13 @@ Documentation=http://zookeeper.apache.org
 Requires=network.target remote-fs.target
 After=network.target remote-fs.target
 [Service]
-Type=simple
+Type=forking
+User=root
+Group=root
 Environment="JAVA_HOME={{JAVA_HOME}}"
 ExecStart=/usr/local/zookeeper/bin/zkServer.sh start
 ExecStop=/usr/local/zookeeper/bin/zkServer.sh stop
-Restart=on-abnormal
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
