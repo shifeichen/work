@@ -6,8 +6,8 @@ After=network.target zookeeper.service
 
 [Service]
 Type=forking
-User=root
-Group=root
+User={{kafka_user}}
+Group={{kafka_group}}
 Environment="JAVA_HOME={{JAVA_HOME}}"
 Environment="KAFKA_OPTS=-javaagent:{{jmx_prometheus}}=7071:{{jmx_yml}}"
 ExecStart=/usr/local/kafka/bin/kafka-server-start.sh -daemon /usr/local/kafka/config/server.properties

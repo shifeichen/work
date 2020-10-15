@@ -1,12 +1,25 @@
-- name: Create kafka Directory
+- name: Add kafka groups
+  group:
+    name: '{{kafka_group}}'
+    state: present
+
+- name: Add kafka user
+  user:
+    name: '{{kafka_user}}'
+    create_home: no
+    state: present
+    group: '{{kafka_group}}'
+
+- name: Add kafka Directory
   file:
     path: '{{ item }}'
     state: directory
     mode: 0755
+    owner: '{{kafka_user}}'
+    group: '{{kafka_group}}'
   changed_when: false
   with_items:
     - '{{ data_dir }}/kafka-logs'
-
 
 - name: get kafka from official website
   get_url:
@@ -20,40 +33,40 @@
     dest: /usr/local/
     mode: 0755
     copy: no # whether to copy local ansible service's file to remote or just use remote file
-
+    owner: '{{kafka_user}}'
+    group: '{{kafka_group}}'
 - name: link kafka
   file:
     src: /usr/local/kafka_2.13-2.5.0
     dest: /usr/local/kafka
     state: link
+    owner: '{{kafka_user}}'
+    group: '{{kafka_group}}'
 
-- name: render templates config to zk conf
+- name: render templates config to config
   template:
     src: server.properties.j2
     dest: /usr/local/kafka/config/server.properties
-    owner: root
-    group: root
+    owner: '{{kafka_user}}'
+    group: '{{kafka_group}}'
 
 - name: Copy jmx yml
   copy:
     src: kafka-0-8-2.yml
     dest: /var/lib/kafka-0-8-2.yml
-
+    owner: '{{kafka_user}}'
+    group: '{{kafka_group}}'
 - name: get jmx file
   get_url:
     dest: '{{ jmx_prometheus_dir }}'
     url: https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.13.0/jmx_prometheus_javaagent-0.13.0.jar
     validate_certs: no
     force: no
+    owner: '{{kafka_user}}'
+    group: '{{kafka_group}}'
+    mode: u=rwx,g=rx,o=rx
 
-#- name: jmx file permission
-#  file:
-#    path: '{{ jmx_prometheus }}'
-#    owner: root
-#    group: root
-#    mode: u=rwx,g=rwx,o=rx
-
-- name: copy zookeeper service
+- name: copy systemd service conf
   template:
     src: kafka.service.j2
     dest: /etc/systemd/system/kafka.service

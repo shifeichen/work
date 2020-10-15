@@ -1,2 +1,4 @@
 data_dir: /data
 JAVA_HOME: /usr/local/jdk-11
+zookeeper_user: zookeeper
+zookeeper_group: zookeeper

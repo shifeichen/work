@@ -1,8 +1,21 @@
+- name: Add zk groups
+  group:
+    name: '{{zookeeper_group}}'
+    state: present
+
+- name: Add zk user
+  user:
+    name: '{{zookeeper_user}}'
+    create_home: no
+    state: present
+    group: '{{zookeeper_group}}'
 - name: Create zk Directory
   file:
     path: '{{ item }}'
     state: directory
     mode: 0755
+    owner: '{{zookeeper_user}}'
+    group: '{{zookeeper_group}}'
   changed_when: false
   with_items:
     - '{{ data_dir }}/zookeeper'
@@ -19,21 +32,31 @@
     dest: /usr/local/
     mode: 0755
     copy: no # whether to copy local ansible service's file to remote or just use remote file
+    owner: '{{zookeeper_user}}'
+    group: '{{zookeeper_group}}'
 - name: iink zk file
   file:
     src: /usr/local/apache-zookeeper-3.5.7-bin
     dest: /usr/local/zookeeper
     state: link
-
+    owner: '{{zookeeper_user}}'
+    group: '{{zookeeper_group}}'
 - name: render templates config to zk conf
   template:
     src: zoo.cfg.j2
     dest: /usr/local/zookeeper/conf/zoo.cfg
-    owner: root
-    group: root
+    owner: '{{zookeeper_user}}'
+    group: '{{zookeeper_group}}'
 # can replaced by template
 - name: config myid
-  shell: echo "{{myid}}" > /data/zookeeper/myid
+  shell: echo "{{myid}}" > '{{ data_dir }}/zookeeper/myid'
+
+- name: myid file permission
+  file:
+    path: '{{ data_dir }}/zookeeper/myid'
+    owner: '{{zookeeper_user}}'
+    group: '{{zookeeper_group}}'
+    mode: u=rwx,g=rwx,o=rx
 
 - name: copy zookeeper service
   template:
