@@ -1,0 +1,5 @@
+- hosts: rabbitmq
+  roles:
+    - optmizesystem
+    - disk
+    - rabbitmq-standlone
