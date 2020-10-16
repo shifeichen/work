@@ -1,0 +1,8 @@
+# I am a complete /etc/rabbitmq/rabbitmq-env.conf file.
+# Comment lines start with a hash character.
+# This is a /bin/sh script file - use ordinary envt var syntax
+USE_LONGNAME=true
+
+NODENAME=rabbit@{{ansible_hostname|lower}}
+MNESIA_BASE={{ mnesia_dir }}
+SERVER_ADDITIONAL_ERL_ARGS='-mnesia dc_dump_limit 40 -mnesia dump_log_write_threshold 50000'

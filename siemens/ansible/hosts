@@ -7,6 +7,8 @@
 [kafka]
 192.168.3.130
 192.168.3.131
+[rabbitmq]
+192.168.3.86 type=single
 [all:vars]
 ansible_ssh_user=root
 ansible_ssh_pass=123456

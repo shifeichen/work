@@ -1,0 +1,24 @@
+mnesia_dir: /data/rabbitmq
+rabbitmqcookie: BPVTRGPZHAQYKQHADFVVY
+
+rabbitmq_version: rabbitmq-server-3.8.5-1.el7
+erlang_version: erlang-22.1.2-1.el7.x86_64
+
+rabbitmq_manage: true
+
+rabbitmqusername: admin
+rabbitmqpassword: MyrabbitmqPassword123456
+
+rabbitmq_management_port: 15672
+
+# RabbitMQ user premissions
+rabbitmq_default_vhost: /
+rabbitmq_configure_priv: .*
+rabbitmq_read_priv: .*
+rabbitmq_write_priv: .*
+rabbitmq_user_state: present
+
+rabbitmq_nodename: "rabbit"
+
+rabbitmq_default_user_tags:
+  - administrator
