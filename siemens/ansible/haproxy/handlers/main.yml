@@ -1,0 +1,4 @@
+- name: daemon-reload
+  systemd:
+    name: haproxy
+    daemon_reload: yes

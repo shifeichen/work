@@ -1,0 +1,61 @@
+- name: Install haproxy-server package (from base repo)
+  yum:
+    name: "{{ haproxy_version }}"
+    state: present
+    allow_downgrade: yes
+    update_cache: yes
+    disablerepo: "epel"
+  register: haproxyoutput
+  ignore_errors: yes
+
+- name: Install rsyslog from updates
+  yum:
+    name: "rsyslog"
+    state: present
+    allow_downgrade: yes
+    update_cache: yes
+    disablerepo: "epel"
+  register: rsyslogoutput
+  ignore_errors: yes
+- name: create syslog file
+  file:
+    path: '{{syslog_file}}'
+    state: touch
+
+- name: configure local2 events to go to the log file
+  lineinfile:
+    dest: '{{syslog_file}}'
+    line: "local2.* {{logfile}}"
+    state: present
+
+- name: render templates config to haproxy conf
+  template:
+    src: haproxy.cfg.j2
+    dest: '{{config_file}}'
+  register: config
+
+- name: render env config of haproxy
+  template:
+    src: haproxy.j2
+    dest: '{{env_file}}'
+  register: env_config
+
+- name: copy haproxy service
+  template:
+    src: haproxy.service.j2
+    dest: '{{systemd_file}}'
+  notify:
+    - daemon-reload
+
+- name: start haproxy
+  systemd:
+    name: haproxy
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: restart-haproxy
+  systemd:
+    name: haproxy
+    state: restarted
+  when: config.changed or env_config.changed

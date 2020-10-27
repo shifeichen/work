@@ -9,6 +9,8 @@
 192.168.3.131
 [rabbitmq]
 192.168.3.86 type=single
+[haproxy]
+192.168.3.129
 [all:vars]
 ansible_ssh_user=root
 ansible_ssh_pass=123456

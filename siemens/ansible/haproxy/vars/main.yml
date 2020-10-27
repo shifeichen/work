@@ -1,0 +1,16 @@
+data_dir: /data
+haproxy_version: haproxy-1.5.18-9.el7
+haproxy_group: haproxy
+haproxy_user: haproxy
+env_file: /etc/sysconfig/haproxy
+exec_file: /usr/sbin/haproxy-systemd-wrapper
+config_file: /etc/haproxy/haproxy.cfg
+systemd_file: /lib/systemd/system/haproxy.service
+pid_file: /run/haproxy.pid
+logfile: /var/log/haproxy.log
+syslog_file: /etc/sysconfig/syslog
+servers:
+  - 192.168.0.27:80
+  - 192.168.0.28:80
+  - 192.168.0.29:80
+frontend_port: 30080

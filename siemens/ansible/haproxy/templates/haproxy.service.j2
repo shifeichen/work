@@ -1,0 +1,12 @@
+[Unit]
+Description=HAProxy Load Balancer
+After=syslog.target network.target
+
+[Service]
+EnvironmentFile={{env_file}}
+ExecStart={{exec_file}} -f {{config_file}} -p {{pid_file}} $OPTIONS
+ExecReload=/bin/kill -USR2 $MAINPID
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target

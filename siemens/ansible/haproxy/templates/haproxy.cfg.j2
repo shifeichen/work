@@ -1,0 +1,38 @@
+# Global settings
+#---------------------------------------------------------------------
+global
+    log         127.0.0.1 local2
+    chroot      /var/lib/haproxy
+    pidfile     /var/run/haproxy.pid
+    maxconn     4096
+    user        haproxy
+    group       haproxy
+    daemon
+    # turn on stats unix socket
+    stats socket /var/lib/haproxy/stats
+#---------------------------------------------------------------------
+# common defaults that all the 'listen' and 'backend' sections will use if not designated in their block
+#---------------------------------------------------------------------
+defaults
+    mode                    tcp
+    log                     global
+    retries                 3
+    timeout queue           1m
+    timeout connect         10s
+    timeout client          1m
+    timeout server          1m
+    timeout check           10s
+    maxconn                 4096
+#---------------------------------------------------------------------
+# tableau frontend which proxys to the backends
+#---------------------------------------------------------------------
+frontend tableau
+    bind *:{{frontend_port}}
+    mode tcp
+    default_backend tableau_servers
+backend tableau_servers
+    balance roundrobin
+    mode tcp
+    {% for server_ip_port in vars.servers  %}
+    server server_{{ loop.index }} {{server_ip_port}} check
+    {% endfor %}
