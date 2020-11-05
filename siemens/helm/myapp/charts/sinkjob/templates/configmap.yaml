@@ -5,6 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   exec_shell.sh: |
+    apk add curl
     sleep 60
     curl -s -X POST -H "Content-Type: application/json" --data '{
     "name": "'$init_sink_name'",
