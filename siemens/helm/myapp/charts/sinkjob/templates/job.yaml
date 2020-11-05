@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Chart.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  template:
+    metadata:
+      name: {{ .Chart.Name }}
+    spec:
+      restartPolicy: OnFailure
+      volumes:
+        - name: shell
+          configMap:
+            name: {{ .Chart.name }}-config
+            defaultMode: 0777
+      containers:
+        - image: alpine:3.12.0
+          name: {{ .Chart.Name }}
+          volumeMounts:
+            - name: shell
+              mountPath: /shell
+          command:
+            - sh
+            - -c
+            - /shell/exec_shell.sh
+          env:
+            - name: init_sink_name
+              value: {{ .Values.global.init_sink_name }}
+            - name: tasks_max
+              value: {{ .Values.global.tasks_max }}
+            - name: topics
+              value: {{ .Values.global.topics }}
+            - name: flush_size
+              value: {{ .Values.global.flush_size }}
+            - name: store_url
+              value: {{ .Values.global.store_url }}
+            - name: s3_bucket_name
+              value: {{ .Values.global.s3_bucket_name }}
+            - name: aws_access_key_id
+              value: {{ .Values.global.aws_access_key_id }}
+            - name: aws_secret_access_key
+              value: {{ .Values.global.aws_secret_access_key }}

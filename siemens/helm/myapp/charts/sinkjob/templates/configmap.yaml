@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.name }}-config
+  namespace: {{ .Release.Namespace }}
+data:
+  exec_shell.sh: |
+    sleep 60
+    curl -s -X POST -H "Content-Type: application/json" --data '{
+    "name": "'$init_sink_name'",
+    "config": {
+    "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+    "tasks.max": "'$tasks_max'",
+    "topics": "'$topics'",
+    "flush.size": "'$flush_size'",
+    "format.class":"io.confluent.connect.s3.format.json.JsonFormat",
+    "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+    "store.url": "'$store_url'",
+    "s3.bucket.name": "'$s3_bucket_name'",
+    "aws.access.key.id": "'$aws_access_key_id'",
+    "aws.secret.access.key": "'$aws_secret_access_key'"
+    }
+    }' http://{{ include "myapp.fullname" . }}.{{ .Release.Namespace }}:80/connectors

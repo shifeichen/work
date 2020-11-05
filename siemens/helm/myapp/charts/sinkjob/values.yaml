@@ -1,0 +1,10 @@
+global:
+  store_url: 'http://192.168.3.134:7480'
+  topics: 's3_topic'
+  tasks_max: '1'
+  flush_size: '3'
+  s3_bucket_name: 's3-kafka-5'
+  #not used for secret currently
+  aws_access_key_id: 'TZPVLDJAKD4FBSBC69RG'
+  aws_secret_access_key: 'ln9oPatigXQ0I6PVoMVJaN9eW4o2c0S9CSEmrKvf'
+  init_sink_name: 'kafka-ceph-sink-0'
