@@ -21,4 +21,4 @@ data:
     "aws.access.key.id": "'$aws_access_key_id'",
     "aws.secret.access.key": "'$aws_secret_access_key'"
     }
-    }' http://{{ include "myapp.fullname" . }}.{{ .Release.Namespace }}:80/connectors
+    }' http://{{ .Release.Name }}.{{ .Release.Namespace }}:80/connectors
