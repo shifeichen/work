@@ -12,7 +12,7 @@ spec:
       volumes:
         - name: shell
           configMap:
-            name: {{ .Chart.name }}-config
+            name: {{ .Chart.Name }}-config
             defaultMode: 0777
       containers:
         - image: alpine:3.12.0
@@ -28,11 +28,11 @@ spec:
             - name: init_sink_name
               value: {{ .Values.global.init_sink_name }}
             - name: tasks_max
-              value: {{ .Values.global.tasks_max }}
+              value: {{ .Values.global.tasks_max |quote }}
             - name: topics
               value: {{ .Values.global.topics }}
             - name: flush_size
-              value: {{ .Values.global.flush_size }}
+              value: {{ .Values.global.flush_size |quote }}
             - name: store_url
               value: {{ .Values.global.store_url }}
             - name: s3_bucket_name

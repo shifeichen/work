@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Chart.name }}-config
+  name: {{ .Chart.Name }}-config
   namespace: {{ .Release.Namespace }}
 data:
   exec_shell.sh: |
