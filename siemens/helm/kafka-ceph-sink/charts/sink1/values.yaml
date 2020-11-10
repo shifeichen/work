@@ -1,0 +1,9 @@
+global:
+  store_url: 'http://rook-ceph-rgw-my-store.rook-ceph'
+  tasks_max: '1'
+  flush_size: '50'
+  init_sink_name: 'sink1'
+  topics: 'uts-sb-kafka-stream'
+  s3_bucket_name: 'core-uts-log-sb-ceph'
+  action: 'create'
+  # use create/delete/update/restart

@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "kafka-ceph-sink.fullname" . }}-configmap
+  labels:
+    app: {{ template "kafka-ceph-sink.name" . }}
+    chart: {{ template "kafka-ceph-sink.chart" . }}
+    release: {{ .Release.Name }}
+data:
+  connect-distributed.properties: |+
+    bootstrap.servers={{ .Values.customEnv.KAFKA_SERVERS }}
+    group.id=connect-cluster
+    key.converter=org.apache.kafka.connect.json.JsonConverter
+    value.converter=org.apache.kafka.connect.json.JsonConverter
+    key.converter.schemas.enable=false
+    value.converter.schemas.enable=false
+    offset.storage.topic=connect-offsets
+    offset.storage.replication.factor=1
+    config.storage.topic=connect-configs
+    config.storage.replication.factor=1
+    status.storage.topic=connect-status
+    status.storage.replication.factor=1
+    offset.flush.interval.ms=10000
+    plugin.path={{ .Values.customEnv.KAFKA_DIR }}/plugins/{{.Values.customEnv.KAFKA_CONNECT_S3_DIR}}

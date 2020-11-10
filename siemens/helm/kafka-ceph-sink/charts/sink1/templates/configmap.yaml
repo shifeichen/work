@@ -1,0 +1,130 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-config
+  namespace: {{ .Release.Namespace }}
+data:
+  createbucket.py: |
+    import boto
+    import boto.s3.connection
+    import os
+    access_key = os.environ.get('aws_access_key_id')
+    secret_key = os.environ.get('aws_secret_access_key')
+    store_url = os.environ.get('store_url').split('://')[1]
+    bucket = os.environ.get('s3_bucket_name')
+    conn = boto.connect_s3(
+        aws_access_key_id = access_key,
+        aws_secret_access_key = secret_key,
+        host = store_url, port= 80,
+        is_secure=False,
+        calling_format = boto.s3.connection.OrdinaryCallingFormat(),
+    )
+    try:
+      if bucket not in conn.get_all_buckets():
+        res_bucket = conn.create_bucket(bucket)
+        print("bucket created %s" %bucket)
+      else:
+        print("bucket already exist")
+    except Exception as e:
+      print("create failed",e)
+      exit(2)
+  exec_shell.sh: |
+    apk add curl
+    apk add python3
+    apk add py3-pip
+    pip3 install  boto
+    python3 /shell/createbucket.py
+    endpoint=http://{{ .Release.Name }}.{{ .Release.Namespace }}:80/connectors
+    # judge if kafka connector rest is up
+    while true;do
+      curl --connect-timeout 3 $endpoint &>/dev/null
+      if [ $? -ne 0 ];then
+        echo "can't connect to $endpoint,need you to check if kafka connector is up."
+        # sleep 10 seconds
+        for i in $(seq 1 10)
+        do
+          if [ $i -ne 10 ];then
+            echo -n .;
+          else
+            echo;
+          fi
+          sleep 1
+        done
+      else
+        echo "succeed to connect to $endpoint"
+        break
+      fi
+    done
+    #judge if action is delete or create or update
+    case $action in
+     create)
+            echo "create $init_sink_name ..."
+            curl -s -X POST -H "Content-Type: application/json" --data '{
+              "name": "'$init_sink_name'",
+              "config": {
+              "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+              "tasks.max": "'$tasks_max'",
+              "topics": "'$topics'",
+              "flush.size": "'$flush_size'",
+              "format.class":"io.confluent.connect.s3.format.json.JsonFormat",
+              "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+              "store.url": "'$store_url'",
+              "s3.bucket.name": "'$s3_bucket_name'",
+              "aws.access.key.id": "'$aws_access_key_id'",
+              "aws.secret.access.key": "'$aws_secret_access_key'"
+              }
+            }' $endpoint |grep 409
+            if [ $? -eq 0 ];then
+              echo "update $init_sink_name ..."
+              curl -s -X PUT -H "Content-Type: application/json" --data '{
+                "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+                "tasks.max": "'$tasks_max'",
+                "topics": "'$topics'",
+                "flush.size": "'$flush_size'",
+                "format.class":"io.confluent.connect.s3.format.json.JsonFormat",
+                "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+                "store.url": "'$store_url'",
+                "s3.bucket.name": "'$s3_bucket_name'",
+                "aws.access.key.id": "'$aws_access_key_id'",
+                "aws.secret.access.key": "'$aws_secret_access_key'"
+              }' $endpoint/$init_sink_name/config
+            else
+              echo "not 409 exist,relax"
+            fi
+            ;;
+     delete)
+            echo "delete $init_sink_name ..."
+            curl -s -X DELETE $endpoint/$init_sink_name
+            ;;
+     update)
+            echo "update $init_sink_name or if not exist create..."
+            curl -s -X PUT -H "Content-Type: application/json" --data '{
+              "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+              "tasks.max": "'$tasks_max'",
+              "topics": "'$topics'",
+              "flush.size": "'$flush_size'",
+              "format.class":"io.confluent.connect.s3.format.json.JsonFormat",
+              "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+              "store.url": "'$store_url'",
+              "s3.bucket.name": "'$s3_bucket_name'",
+              "aws.access.key.id": "'$aws_access_key_id'",
+              "aws.secret.access.key": "'$aws_secret_access_key'"
+            }' $endpoint/$init_sink_name/config
+            ;;
+     restart)
+            echo "restart $init_sink_name ..."
+            curl -s -X POST $endpoint/$init_sink_name/restart
+            ;;
+     pause)
+            echo "pause $init_sink_name ..."
+            curl -s -X PUT $endpoint/$init_sink_name/pause
+            ;;
+     resume)
+            echo "resume $init_sink_name ..."
+            curl -s -X PUT $endpoint/$init_sink_name/resume
+            ;;
+     *)
+            echo "action: [create|delete|update|restart]"
+            exit 1
+            ;;
+    esac
