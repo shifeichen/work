@@ -28,6 +28,22 @@ data:
     except Exception as e:
       print("create failed",e)
       exit(2)
+  kafka_topic_create.py: |
+    from kafka.admin import KafkaAdminClient
+    from kafka.admin import NewTopic
+    import os
+    brokers=os.environ.get('brokers')
+    topic_name=os.environ.get('topics')
+    num_partitions=int(os.environ.get('num_partitions'))
+    replication_factor=int(os.environ.get('replication_factor'))
+    c = KafkaAdminClient(bootstrap_servers=brokers)
+    topic_list = []
+    if topic_name not in c.list_topics():
+      print("create topic:%s" %topic_name)
+      topic_list.append(NewTopic(name=topic_name, num_partitions=num_partitions, replication_factor=replication_factor))
+      c.create_topics(new_topics=topic_list, validate_only=False)
+    else:
+      print("topic:%s exists" %topic_name)
   exec_shell.sh: |
     apk add curl
     apk add python3
@@ -130,14 +146,3 @@ data:
             exit 1
             ;;
     esac
-  kafka_topic_create.py: |
-    from kafka.admin import KafkaAdminClient, NewTopic
-    import os
-    brokers=os.environ.get('brokers')
-    topic_name=os.environ.get('topics')
-    num_partitions=int(os.environ.get('num_partitions'))
-    replication_factor=int(os.environ.get('replication_factor'))
-    c = KafkaAdminClient(bootstrap_servers=brokers)
-    topic_list = []
-    if topic_name not in c.list_topics():print("create topic:%s" %topic_name);topic_list.append(NewTopic(name=topic_name, num_partitions=num_partitions, replication_factor=replication_factor));c.create_topics(new_topics=topic_list, validate_only=False)
-    else:print("topic:%s exists" %topic_name)
