@@ -130,7 +130,7 @@ data:
             exit 1
             ;;
     esac
-  kafka_topic_create.py:
+  kafka_topic_create.py: |
     from kafka.admin import KafkaAdminClient, NewTopic
     import os
     brokers=os.environ.get('brokers')
