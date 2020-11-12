@@ -6,4 +6,7 @@ global:
   topics: 'uts-sb-kafka-stream'
   s3_bucket_name: 'core-uts-log-sb-ceph'
   action: 'create'
+  num_partitions: '2'
+  replication_factor: '2'
+  brokers: 'kafka-p-fl4fh.kafka-p-fl4fh:9092'
   # use create/delete/update/restart

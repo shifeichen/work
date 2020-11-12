@@ -81,7 +81,7 @@ affinity: {}
 
 customEnv:
   CUSTOM_SCRIPT_PATH: /entrypoint.sh
-  KAFKA_DIR: /usr/local/kafka_2.13-2.5.0 
+  KAFKA_DIR: /usr/local/kafka_2.13-2.5.0
   KAFKA_SERVERS: 'kafka-p-fl4fh.kafka-p-fl4fh:9092'
   KAFKA_CONNECT_S3_DIR: confluentinc-kafka-connect-s3-5.5.2
 # env may not be gotten by system when mount volumes

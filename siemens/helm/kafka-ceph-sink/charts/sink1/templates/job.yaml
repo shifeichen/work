@@ -49,3 +49,9 @@ spec:
                   key: ceph_access_key_secret
             - name: action
               value: {{.Values.global.action}}
+            - name: num_partitions
+              value: {{.Values.global.num_partitions |quote}}
+            - name: replication_factor
+              value: {{.Values.global.replication_factor |quote}}
+            - name: brokers
+              value: {{.Values.global.brokers}}
