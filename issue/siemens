@@ -1,0 +1,5 @@
+2020-11-12
+1.certificatemanager ui broker domain of integ environment show brokerdomain of cert environment
+reson: build need environment attributes because ts file dns content will be cited
+solved: build specified code before deployed to specified environment
+
